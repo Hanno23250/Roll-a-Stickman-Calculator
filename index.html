@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Roll a Stickman – Build Planner &amp; Simulator</title>
+<style>
+:root{color-scheme:dark;--bg:#0f1015;--panel:#181a22;--card:#1e2029;--field:#12131a;--line:#2c2f3d;--txt:#e6e8f2;--mut:#7f849a;--acc:#8b5cf6;--rim:rgba(34,211,238,.4);--rimglow:rgba(34,211,238,.15);--btn:#93B9E8;--btn-shadow:#5f84b3;--btn-txt:#0f1015}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--txt);font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:20px;background:radial-gradient(circle at 15% 0,#1a1c28 0,#0f1015 55%) fixed}
+.wrap{max-width:1500px;margin:0 auto}
+h1{margin:0 0 4px;font-size:28px;letter-spacing:.5px}
+h1 span{background:linear-gradient(90deg,#a78bfa,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--mut);font-size:14px;margin-bottom:18px}
+.panel{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:16px;margin-bottom:18px}
+.panel h2{margin:0 0 12px;font-size:13px;text-transform:uppercase;letter-spacing:1.6px;color:var(--mut)}
+.top{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:stretch;margin-bottom:18px}
+.top .panel{margin:0;display:flex;flex-direction:column}
+@media(max-width:850px){.top{grid-template-columns:1fr}}
+input,select{width:100%;background:var(--field);color:var(--txt);border:2px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s}
+input::placeholder{color:#50546a}
+input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(139,92,246,.2)}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+select{appearance:none;-webkit-appearance:none;padding-right:28px;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%237f849a' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+option{background:#15161d;color:var(--txt)}
+label{display:block;font-size:10.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.8px;margin:8px 0 3px}
+.row{display:flex;gap:8px;align-items:flex-end}
+.row>*{flex:1}
+.row>button{flex:0 0 auto}
+.hint{margin-top:10px;font-size:12px;color:var(--mut);background:#14151c;border:1px solid var(--line);border-radius:10px;padding:8px 10px;line-height:1.5}
+button{font:inherit;font-weight:800;letter-spacing:.8px;border:0;border-radius:10px;cursor:pointer;color:var(--btn-txt);background:var(--btn);padding:9px 16px;transition:transform .08s,filter .15s,background .2s;box-shadow:0 3px 0 var(--btn-shadow)}
+button:hover{filter:brightness(1.08)}
+button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--btn-shadow)}
+.b-save{background:var(--btn);box-shadow:0 3px 0 var(--btn-shadow)}
+.b-red{background:var(--btn);box-shadow:0 3px 0 var(--btn-shadow);width:100%;padding:12px;font-size:15px;margin-top:auto}
+.b-blue{background:var(--btn);box-shadow:0 4px 0 var(--btn-shadow);width:100%;padding:15px;font-size:19px;margin-top:8px}
+.b-green{background:var(--btn);box-shadow:0 4px 0 var(--btn-shadow);width:100%;padding:14px;font-size:16px;margin-top:12px;letter-spacing:1px}
+.b-green.ok{background:var(--btn);filter:brightness(1.15)}
+.b-sm{padding:5px 12px;font-size:12px;box-shadow:0 2px 0 var(--btn-shadow)}
+.b-load{background:var(--btn)}.b-del{background:var(--btn)}
+.saved{margin-top:10px;flex:1;min-height:90px;overflow:auto;display:flex;flex-direction:column;gap:6px;align-content:flex-start}
+.sv{display:flex;align-items:center;gap:6px;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.sv span{flex:1;font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.empty{color:var(--mut);font-size:13px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:#252837;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;color:#fcd34d;font-weight:600}
+.scroll{overflow-x:auto;padding-bottom:6px;border-radius:12px}
+.slots{display:grid;grid-template-columns:repeat(5,minmax(230px,1fr));gap:12px;min-width:1190px}
+.slot{background:var(--card);border:1px solid rgba(34,211,238,.4);box-shadow:0 0 10px rgba(34,211,238,.15);border-radius:16px;padding:10px 12px 12px}
+.no{display:inline-block;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-weight:800;font-size:12px;letter-spacing:.6px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.g5 div{text-align:center}
+.g5 small{display:block;font-size:9.5px;color:var(--mut);font-weight:700;margin-bottom:2px}
+.g5 input{padding:8px 2px;text-align:center;font-size:13px;font-weight:700;border-radius:8px}
+.dash{display:flex;flex-direction:column;gap:12px}
+.mode{display:grid;grid-template-columns:230px 1fr;gap:16px;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:14px 16px;align-items:center}
+@media(max-width:800px){.mode{grid-template-columns:1fr}}
+.mh{display:flex;align-items:center;gap:12px}
+.grade{min-width:62px;text-align:center;font-size:28px;font-weight:900;padding:6px 8px;border-radius:12px}
+.mh b{font-size:16px;letter-spacing:1px}
+.mh small{display:block;color:var(--mut);font-size:11px;margin-top:2px}
+.bar{height:16px;background:var(--field);border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+.fill{height:100%;width:0;border-radius:999px;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.pct{font-size:12px;color:var(--mut);margin:4px 0 6px}
+.tips{list-style:none;margin:0;padding:0;font-size:13.5px;line-height:1.55;color:#c6cade}
+.tips li::before{content:"• ";color:#fbbf24;font-weight:900}
+.msg{color:var(--mut);font-size:13px;margin-top:8px;min-height:18px}
+.msg.err{color:#fb7185}
+
+/* --- Custom Stepper (Arrows next to number) --- */
+.input-stepper{display:flex;align-items:stretch;background:var(--field);border:2px solid var(--line);border-radius:10px;overflow:hidden;width:100%;transition:border-color .15s,box-shadow .15s}
+.input-stepper:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px rgba(139,92,246,.2)}
+.input-stepper input{border:0!important;box-shadow:none!important;border-radius:0!important;text-align:center;background:transparent;padding-left:0;padding-right:0}
+.step-btn{background:#252837;color:var(--btn);border:none;padding:0 12px;box-shadow:none;border-radius:0;font-size:18px;font-weight:900;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center}
+.step-btn:hover{background:#32364a;filter:none}
+.step-btn:active{transform:none;box-shadow:none}
+.base-stat-row{display:flex;gap:8px;margin-top:6px}
+
+/* Squad Header Highlight */
+.squad-header{color:var(--btn) !important;font-size:16px !important;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1><span>Roll a Stickman</span> · Build Planner &amp; Simulator</h1>
+<div class="sub">Pick your base: its bonuses load automatically. HP and ATK are plain decimals in millions (16.0 = 16M).</div>
+
+<div class="top">
+<div class="panel">
+<h2>Player Base</h2>
+<label style="margin-top:0">Select Base</label>
+<select id="base"></select>
+
+<!-- Row 1 -->
+<div class="base-stat-row" id="b1row">
+    <div class="input-stepper" style="flex:1">
+        <button type="button" class="step-btn" onclick="stepVal('b1v', -1)">−</button>
+        <input id="b1v" type="number" step="any" placeholder="Value %">
+        <button type="button" class="step-btn" onclick="stepVal('b1v', 1)">+</button>
+    </div>
+    <select id="b1t" style="width:120px"></select>
+</div>
+
+<!-- Row 2 -->
+<div class="base-stat-row" id="b2row">
+    <div class="input-stepper" style="flex:1">
+        <button type="button" class="step-btn" onclick="stepVal('b2v', -1)">−</button>
+        <input id="b2v" type="number" step="any" placeholder="Value %">
+        <button type="button" class="step-btn" onclick="stepVal('b2v', 1)">+</button>
+    </div>
+    <select id="b2t" style="width:120px"></select>
+</div>
+
+<!-- Row 3 -->
+<div class="base-stat-row" id="b3row">
+    <div class="input-stepper" style="flex:1">
+        <button type="button" class="step-btn" onclick="stepVal('b3v', -1)">−</button>
+        <input id="b3v" type="number" step="any" placeholder="Value %">
+        <button type="button" class="step-btn" onclick="stepVal('b3v', 1)">+</button>
+    </div>
+    <select id="b3t" style="width:120px"></select>
+</div>
+
+<div class="hint" id="basenote"></div>
+<div style="height:14px"></div>
+<button class="b-red" id="clear">CLEAR ALL</button>
+</div>
+
+<div class="panel">
+<h2>Local Build Manager</h2>
+<div class="row"><div><label style="margin-top:0">Build name</label><input id="bname" placeholder="e.g. Guild Boss Team" maxlength="40"></div><button class="b-save" id="save">SAVE</button></div>
+<div class="msg" id="msg"></div>
+<div class="saved" id="saved"></div>
+<button class="b-green" id="share">🔗 Copy Share Link</button>
+</div>
+</div>
+
+<!-- SQUAD SECTION -->
+<div class="panel" style="border-color:var(--btn)">
+<h2 class="squad-header">
+    <span>⚔ SQUAD · SLOT 5 ON THE LEFT → SLOT 1 (FRONT) ON THE RIGHT</span>
+    <span style="font-size:12px;color:var(--mut)">Scroll horizontally if cut off →</span>
+</h2>
+<div class="scroll"><div class="slots" id="slots"></div></div>
+<button class="b-blue" id="calc">⚔ CALCULATE BUILD</button>
+</div>
+
+<div id="teamsum" class="panel" style="display:none"></div>
+<div class="dash" id="dash"></div>
+</div>
+
+<script>
+/* Base data with support for 1, 2, or 3 stats */
+const BASEDATA={
+"Frost Citadel":{stats:[{t:"FREEZE",v:9}],note:"9% freeze on hit"},
+"Ember Forge":{stats:[{t:"BURN",v:14}],note:"14% burn on hit"},
+"Tidewall Keep":{stats:[{t:"HP",v:7},{t:"DEF",v:27}],note:"+7% health · 27% starting shield"},
+"Sunspire Temple":{stats:[{t:"ATK",v:14},{t:"HP",v:9}],note:"+14% attack · +9% health"},
+"Shadow Bastion":{stats:[{t:"ATK",v:9},{t:"CRIT",v:22}],note:"+9% attack · +22% crit"},
+"Starfall Observatory":{stats:[{t:"SPD",v:14},{t:"CRIT",v:10},{t:"FREEZE",v:5}],note:"+14% speed · +10% crit · 5% freeze on hit"},
+"Dragon Throne":{stats:[{t:"ATK",v:10},{t:"BURN",v:10}],note:"+10% attack · 10% burn on hit"},
+"Hallow Keep":{stats:[{t:"ATK",v:11},{t:"PUMPKIN",v:7}],note:"+11% attack · 7% pumpkin on hit"}
+};
+const BASENAMES=Object.keys(BASEDATA);
+const BTYPES={ATK:"atk",HP:"hp",SPD:"spd",CRIT:"crit",FREEZE:"freeze",BURN:"burn",DEF:"shield",SHIELD:"shield",PUMPKIN:"pumpkin"};
+const TRAITS={
+"None":{},
+"Titanic":{hp:30,surv:1},
+"Phoenix":{hp:15,surv:1,pv:1},
+"Spite":{atk:10,hp:10,surv:1},
+"Stormborn":{spd:15},
+"Divine":{atk:60,hp:60,spd:25,surv:.5},
+"Overlord":{atk:25},
+"Voidborn":{hp:20,surv:1,pv:1},
+"Ascendant":{atk:20,hp:20},
+"Quickdraw":{spd:20},
+"Executioner":{atk:15},
+"Spiked":{atk:10,surv:.4},
+"Guarded":{hp:15,surv:.8}
+};
+const SETS={
+"None":{},
+"Berserker":{scale:1,boss:.7},
+"Bulwark":{surv:1},
+"Gale":{cc:1},
+"Reaper":{aoe:1},
+"Lifebloom":{ls:1,surv:.5},
+"Frost":{aoe:1,cc:.5},
+"Ember":{scale:1},
+"Titanslayer":{boss:1,tslay:1},
+"Sanctuary":{ls:1,surv:.8},
+"Warbanner":{scale:.5}
+};
+const FIELDS=["n","hp","atk","spd","m","a","h","s","c","d","t","g"];
+const NUMF=["hp","atk","spd","m","a","h","s","c","d"];
+const EMPTY={n:"",hp:0,atk:0,spd:0,m:"1.0",a:0,h:0,s:0,c:0,d:0,t:"None",g:"None"};
+const $=id=>document.getElementById(id);
+const optsA=(a,sel)=>a.map(k=>`<option${k===sel?" selected":""}>${k}</option>`).join("");
+const opts=(o,sel)=>optsA(Object.keys(o),sel);
+const num=id=>{const v=parseFloat($(id).value);return isFinite(v)?Math.max(-1e9,Math.min(1e9,v)):0;};
+const cl=x=>Math.max(0,Math.min(1,x));
+const M=v=>(isFinite(v)?v:0).toFixed(2)+"M";
+const F2=v=>(isFinite(v)?v:0).toFixed(2);
+
+/* 1. Render Slots FIRST (so DOM elements exist before calculation runs) */
+function slotHTML(i,d){const p=`s${i}_`;
+return `<div class="slot"><span class="no">${i===0?"SLOT 1 · FRONT":"SLOT "+(i+1)}</span>
+<label>Card name</label><input id="${p}n" value="${d.n}" placeholder="Card name">
+<div class="g3"><div><label>HP (M)</label><input id="${p}hp" type="number" step="any" value="${d.hp}"></div>
+<div><label>ATK (M)</label><input id="${p}atk" type="number" step="any" value="${d.atk}"></div>
+<div><label>Speed</label><input id="${p}spd" type="number" step="any" value="${d.spd}"></div></div>
+<label>Unit gear multiplier (x)</label><input id="${p}m" type="number" step="any" value="${d.m}">
+<label>Gear stat totals (%)</label>
+<div class="g5"><div><small>+%ATK</small><input id="${p}a" type="number" step="any" value="${d.a}"></div>
+<div><small>+%HP</small><input id="${p}h" type="number" step="any" value="${d.h}"></div>
+<div><small>+%SPD</small><input id="${p}s" type="number" step="any" value="${d.s}"></div>
+<div><small>+%CRIT</small><input id="${p}c" type="number" step="any" value="${d.c}"></div>
+<div><small>+%CDMG</small><input id="${p}d" type="number" step="any" value="${d.d}"></div></div>
+<div class="g2"><div><label>Trait</label><select id="${p}t">${opts(TRAITS,d.t)}</select></div>
+<div><label>Gear set</label><select id="${p}g">${opts(SETS,d.g)}</select></div></div></div>`;}
+$("slots").innerHTML=[4,3,2,1,0].map(i=>slotHTML(i,EMPTY)).join("");
+
+/* 2. Populate Dropdowns */
+$("base").innerHTML=optsA(BASENAMES,"Starfall Observatory");
+[1,2,3].forEach(i=>{ $(`b${i}t`).innerHTML=opts(BTYPES,"ATK"); });
+
+/* 3. Stepper logic */
+window.stepVal=function(id, amount){
+    const el=$(id);
+    let v=parseFloat(el.value)||0;
+    v+=amount;
+    if(v<0)v=0;
+    el.value=v;
+    calculateBuild();
+};
+
+function updateNote(){const d=BASEDATA[$("base").value];$("basenote").textContent=d?"Default effects: "+d.note:"";}
+function applyBase(){
+    const d=BASEDATA[$("base").value];if(!d)return;
+    for(let i=1; i<=3; i++){
+        const v=$(`b${i}v`), t=$(`b${i}t`), row=$(`b${i}row`);
+        if(d.stats[i-1]){
+            v.value=d.stats[i-1].v;
+            t.value=d.stats[i-1].t;
+            row.style.display="flex";
+        }else{
+            v.value="";
+            t.selectedIndex=0;
+            row.style.display="none";
+        }
+    }
+    updateNote();
+    calculateBuild();
+}
+function resolveBase(n){
+    n=String(n||"");
+    if(BASEDATA[n])return n;
+    const k=n.split(" (")[0].replace(/LV.*|MAX/g,"").trim();
+    return BASENAMES.find(x=>x.split(" (")[0].replace(/LV.*|MAX/g,"").trim()===k)||BASENAMES[0];
+}
+$("base").onchange=applyBase;
+
+/* Prevent huge exponential numbers */
+document.addEventListener("blur",function(e){
+  const el=e.target;
+  if(!el||el.tagName!=="INPUT"||el.type!=="number")return;
+  const raw=el.value;if(raw==="")return;
+  const v=parseFloat(raw);
+  if(!isFinite(v)){el.value="";return;}
+  if(v>1e9||v<-1e9){el.value=Math.max(-1e9,Math.min(1e9,v));}
+},true);
+
+function getState(){
+    const slots=[];for(let i=0;i<5;i++){const o={};FIELDS.forEach(f=>o[f]=$(`s${i}_${f}`).value);slots.push(o);}
+    const bx=[];
+    for(let i=1; i<=3; i++){
+        if($(`b${i}row`).style.display !== "none"){
+            bx.push($(`b${i}v`).value, $(`b${i}t`).value);
+        }
+    }
+    return{base:$("base").value,bx:btoa(JSON.stringify(bx)),slots};
+}
+function setState(s){
+    const rb=resolveBase(s.base);if(rb)$("base").value=rb;
+    
+    let bx=[]; try{ bx = Array.isArray(s.bx) ? s.bx : JSON.parse(atob(s.bx)); }catch(e){ bx = s.bx || []; }
+    
+    for(let i=1; i<=3; i++){
+        const v=$(`b${i}v`), t=$(`b${i}t`), row=$(`b${i}row`);
+        if(bx[(i-1)*2] !== undefined){
+            v.value=bx[(i-1)*2];
+            t.value=bx[(i-1)*2+1] || "ATK";
+            row.style.display="flex";
+        }else{
+            v.value=""; t.selectedIndex=0; row.style.display="none";
+        }
+    }
+    updateNote();
+    s.slots.forEach((o,i)=>FIELDS.forEach(f=>{const el=$(`s${i}_${f}`);if(el&&o[f]!==undefined)el.value=o[f];}));
+}
+function say(t,err){const m=$("msg");m.textContent=t;m.classList.toggle("err",!!err);}
+
+const KEY="rollAStickmanBuilds";
+function store(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return {}}}
+function put(o){try{localStorage.setItem(KEY,JSON.stringify(o));return true}catch(e){return false}}
+function renderSaved(){const box=$("saved"),all=store(),names=Object.keys(all);box.innerHTML="";
+if(!names.length){box.innerHTML='<div class="empty">No saved builds yet.</div>';return;}
+names.forEach(n=>{const r=document.createElement("div");r.className="sv";
+const s=document.createElement("span");s.textContent=n;
+const l=document.createElement("button");l.className="b-sm b-load";l.textContent="Load";
+l.onclick=()=>{setState(all[n]);calculateBuild();say(`Loaded “${n}”.`);};
+const d=document.createElement("button");d.className="b-sm b-del";d.textContent="Delete";
+d.onclick=()=>{const a=store();delete a[n];put(a);renderSaved();say(`Deleted “${n}”.`);};
+r.append(s,l,d);box.append(r);});}
+$("save").onclick=()=>{const n=$("bname").value.trim();if(!n){say("Please enter a build name first.",true);return;}
+const a=store();a[n]=getState();const ok=put(a);say(ok?`Saved “${n}”.`:"Saving failed: browser storage is unavailable.",!ok);renderSaved();};
+renderSaved();
+
+function toB64(obj){return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");}
+function fromB64(s){s=s.replace(/-/g,"+").replace(/_/g,"/");while(s.length%4)s+="=";return JSON.parse(decodeURIComponent(escape(atob(s))));}
+function buildLink(){const st=getState();
+const b=toB64({v:4,b:st.base,x:st.bx,s:st.slots.map(o=>FIELDS.map(f=>o[f]))});
+const u=new URL(location.href);u.search="";u.hash="";u.searchParams.set("build",b);return u.toString();}
+function decodeBuild(raw){
+const s=String(raw||"").trim();if(!s||s.length>20000)throw new Error("empty");
+const d=fromB64(s.replace(/\s+/g,""));
+const rb=d&&resolveBase(d.b);
+if(!d||!rb||!d.x||!Array.isArray(d.s)||d.s.length!==5)throw new Error("structure");
+const bx=Array.isArray(d.x) ? d.x.map(String) : JSON.parse(atob(d.x));
+const slots=d.s.map(a=>{if(!Array.isArray(a)||a.length!==FIELDS.length)throw new Error("slot");
+const o={};FIELDS.forEach((f,k)=>o[f]=String(a[k]??""));
+o.n=o.n.slice(0,40); return o;});
+return{base:rb,bx,slots};}
+function copyText(t,ok,fail){
+const legacy=()=>{const ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0;top:0;left:0";document.body.appendChild(ta);ta.select();
+let good=false;try{good=document.execCommand("copy");}catch(e){}ta.remove();good?ok():fail();};
+if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(ok,legacy);else legacy();}
+$("share").onclick=()=>{const link=buildLink(),btn=$("share");
+try{history.replaceState(null,"",link);}catch(e){}
+copyText(link,()=>{btn.textContent="✔ Link Copied!";btn.classList.add("ok");say("Share link copied to your clipboard.");
+setTimeout(()=>{btn.textContent="🔗 Copy Share Link";btn.classList.remove("ok");},2200);},
+()=>say("Copy failed: copy the link from your address bar instead.",true));};
+
+$("clear").onclick=()=>{
+for(let i=0;i<5;i++)FIELDS.forEach(f=>{const el=$(`s${i}_${f}`);if(!el)return;
+if(el.tagName==="SELECT")el.selectedIndex=0;else if(f==="m")el.value="1.0";else el.value="";});
+applyBase();
+$("dash").innerHTML="";$("teamsum").style.display="none";say("Everything cleared. Base restored to defaults.");};
+
+const grade=p=>p>=92?["S+","#ff4fa3","#fff"]:p>=84?["S","#fbbf24","#1a1300"]:p>=72?["A","#4ade80","#06260f"]:p>=58?["B","#38bdf8","#04202e"]:p>=44?["C","#a855f7","#fff"]:p>=30?["D","#fb923c","#2a1100"]:["F","#ef4444","#fff"];
+
+function calculateBuild(){
+const base={atk:0,hp:0,spd:0,crit:0,freeze:0,burn:0,shield:0,pumpkin:0};
+for(let i=1; i<=3; i++){
+    if($(`b${i}row`).style.display !== "none"){
+        const k=BTYPES[$(`b${i}t`).value];
+        if(k) base[k]+=num(`b${i}v`);
+    }
+}
+
+const cs=[0,1,2,3,4].map(i=>{const p=`s${i}_`;return{no:i+1,hp:num(p+"hp"),atk:num(p+"atk"),spd:num(p+"spd"),m:num(p+"m"),
+ga:num(p+"a"),gh:num(p+"h"),gs:num(p+"s"),gc:num(p+"c"),gd:num(p+"d"),t:TRAITS[$(p+"t").value]||{},s:SETS[$(p+"g").value]||{}};});
+const sum=f=>cs.reduce((a,c)=>a+f(c),0);
+
+const totalHP=sum(c=>c.hp)*(1+(sum(c=>c.gh)+base.hp+sum(c=>c.t.hp||0))/100);
+const totalATK=sum(c=>c.atk)*(1+(sum(c=>c.ga)+base.atk+sum(c=>c.t.atk||0))/100);
+const avgSpd=sum(c=>c.spd)/5+base.spd+sum(c=>c.gs)+sum(c=>c.t.spd||0);
+const filled=cs.map(c=>c.m).filter(x=>x>0);
+const avgMult=filled.length?filled.reduce((a,b)=>a+b,0)/filled.length:1;
+const power=(totalHP+totalATK)*avgSpd*avgMult;
+
+if(totalHP+totalATK===0){$("dash").innerHTML='<div class="panel empty">Enter some card stats first, then calculate again.</div>';$("teamsum").style.display="none";return;}
+
+const front=cs[0];
+const frontHP=front.hp*(1+(front.gh+base.hp+(front.t.hp||0))/100);
+const aoe=sum(c=>c.s.aoe||0),ls=sum(c=>c.s.ls||0),pv=sum(c=>c.t.pv||0);
+const boss=sum(c=>c.s.boss||0),tslay=sum(c=>c.s.tslay||0);
+const cc=sum(c=>c.s.cc||0)+Math.min(base.freeze/10,1);
+const frontSurv=(front.t.surv||0)+(front.s.surv||0);
+const pairSurv=cs.slice(0,2).reduce((a,c)=>a+(c.t.surv||0)+(c.s.surv||0),0);
+const avgCrit=sum(c=>c.gc)/5+base.crit,avgCd=sum(c=>c.gd)/5;
+const N={spd:cl((avgSpd-60)/240),atk:cl(totalATK/120),hp:cl(totalHP/400)};
+const aoeN=cl(aoe/3),frontN=.5*cl(frontHP/60)+.5*cl(frontSurv/2),survN=.5*N.hp+.5*cl(pairSurv/4);
+const susN=.7*N.atk+.3*N.spd,ccN=cl(cc/2.5);
+const dpsN=.7*N.atk+.3*cl(tslay/2),critN=.4*cl(avgCrit/50)+.3*cl(avgCd/100)+.3*N.spd,baseN=cl((base.atk+base.crit)/30);
+const poolN=.6*N.hp+.4*cl(pv/2.5),shieldN=cl(ls/2.5+.3*cl(base.shield/30)),dodgeN=N.spd;
+const bossN=cl(boss/2.5),raidSurv=pv>=1?.6+.4*N.hp:.25*N.hp;
+
+const aoeSlots=cs.filter(c=>c.s.aoe).map(c=>c.no).join(", ");
+const MODES=[
+{n:"STORY",d:"40% AoE · 30% Single Target · 30% Frontline",parts:[
+ [.40,aoeN,`Story: only ${aoe} AoE set(s), equip Frost or Reaper Set on more cards`],
+ [.30,N.atk,`Story: single target ATK is low (${M(totalATK)}), add Berserker or Ember Set`],
+ [.30,frontN,`Story: Slot 1 is fragile (${M(frontHP)} HP), give it Titanic/Phoenix or Bulwark Set`]]},
+{n:"TOWER",d:"40% Survival · 40% Sustained ATK · 20% CC",parts:[
+ [.40,survN,`Tower: Slot 1 and 2 lack survival, add Spite/Phoenix trait or Bulwark Set`],
+ [.40,susN,`Tower: sustained damage is weak (${M(totalATK)} ATK), raise ATK and speed`],
+ [.20,ccN,`Tower: no crowd control, equip Gale Set or use a freeze base`]]},
+{n:"ENDLESS MODE",d:"50% HP Pool + Defensive Traits · 40% Healing/Shields · 10% Dodge",parts:[
+ [.50,poolN,pv?`Endless: HP pool is small (${M(totalHP)}), add Titanic/Guarded or Bulwark Set`:`Endless: no Phoenix or Voidborn trait, add one for a bigger HP pool!`],
+ [.40,shieldN,`Endless: healing/shields are weak, equip Lifebloom or Sanctuary Set`],
+ [.10,dodgeN,`Endless: low dodge, raise team speed (${F2(avgSpd)})`]]},
+{n:"GUILD BOSS",d:"60% Single Target · 30% Crit Scaling · 10% Buff Base",parts:[
+ [.60,dpsN,tslay?`Guild Boss: add more Titanslayer Sets (${tslay} equipped), raise raw ATK`:`Guild Boss: no Titanslayer Set, equip it for +30% boss score!`],
+ [.30,critN,`Guild Boss: crit scaling is weak, stack %CRIT, %CDMG and speed`],
+ [.10,baseN,`Guild Boss: your base gives little ATK/CRIT, level up a buff base`]]},
+{n:"RAIDS",d:"40% Boss Damage Sets · 30% Team ATK · 30% Survival Buffer",parts:[
+ [.40,bossN,`Raids: boss damage is low, equip Titanslayer or Berserker Sets`],
+ [.30,N.atk,`Raids: team ATK pool is small (${M(totalATK)}), stack %ATK gear`],
+ [.30,raidSurv,pv?`Raids: survival buffer is thin, raise team HP (${M(totalHP)})`:`Raids: no Phoenix or Voidborn in the team, add one for survival!`]]}];
+
+$("dash").innerHTML=MODES.map(m=>{
+const score=m.parts.reduce((a,p)=>a+p[0]*p[1],0),pct=Math.round(score*100),[g,bg,fg]=grade(pct);
+const tips=[];
+if(m.n==="GUILD BOSS"&&aoeSlots)tips.push(`Guild Boss: AoE gear is useless here (Slot ${aoeSlots}), equip Titanslayer Set!`);
+m.parts.map(p=>({gap:p[0]*(1-p[1]),t:p[2]})).sort((a,b)=>b.gap-a.gap).filter(x=>x.gap>.04).slice(0,3).forEach(x=>tips.push(x.t));
+if(!tips.length)tips.push(`${m.n[0]+m.n.slice(1).toLowerCase()}: build is dialed in, only gear levels left to push`);
+return `<div class="mode"><div class="mh"><div class="grade" style="background:${bg};color:${fg}">${g}</div><div><b>${m.n}</b><small>${m.d}</small></div></div>
+<div><div class="bar"><div class="fill" data-w="${pct}" style="background:${bg}"></div></div><div class="pct">${pct}% performance</div><ul class="tips">${tips.map(t=>`<li>${t}</li>`).join("")}</ul></div></div>`;}).join("");
+requestAnimationFrame(()=>document.querySelectorAll(".fill").forEach(f=>f.style.width=f.dataset.w+"%"));
+
+const ts=$("teamsum");ts.style.display="block";
+ts.innerHTML=`<h2>Team Summary · ${$("base").value}</h2><div class="chips">
+<span class="chip">Total HP ${M(totalHP)}</span><span class="chip">Total ATK ${M(totalATK)}</span>
+<span class="chip">Avg Speed ${F2(avgSpd)}</span><span class="chip">Avg Multiplier ×${F2(avgMult)}</span>
+<span class="chip">Army Power ${F2(power)}</span></div>`;
+}
+$("calc").onclick=calculateBuild;
+
+/* 4. Initialize at the VERY END so slots and DOM are completely ready */
+window.onload=function(){
+    const p=new URLSearchParams(location.search).get("build");
+    if(p){
+        try{
+            setState(decodeBuild(p));
+            say("Build loaded from share link.");
+        }catch(e){
+            say("The share link could not be read. Showing the default build.",true);
+            applyBase();
+        }
+    }else{
+        applyBase();
+    }
+    calculateBuild();
+};
+</script>
+</body>
+</html>
